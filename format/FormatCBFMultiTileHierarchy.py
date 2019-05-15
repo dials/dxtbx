@@ -344,7 +344,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
                 if types[i] == "signed 32-bit integer":
                     array_string = cbf.get_integerarray_as_string()
                     nelem = int(len(array_string) / 4)
-                    array = flex.int(struct.unpack("%dl" % nelem, array_string))
+                    array = flex.int(struct.unpack("%di" % nelem, array_string))
                     parameters = cbf.get_integerarrayparameters_wdims_fs()
                     array_size = (parameters[11], parameters[10], parameters[9])
                 elif types[i] == "signed 64-bit real IEEE":
