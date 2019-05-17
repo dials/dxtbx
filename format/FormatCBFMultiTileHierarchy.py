@@ -17,6 +17,7 @@ from dxtbx.format.FormatCBFMultiTile import FormatCBFMultiTile
 from dxtbx.format.FormatStill import FormatStill
 from dxtbx.model import Detector
 from libtbx.utils import Sorry
+from scitbx.array_family import flex
 from scitbx.matrix import col, sqr
 
 
@@ -317,10 +318,7 @@ class FormatCBFMultiTileHierarchy(FormatCBFMultiTile):
 
     def get_raw_data(self):
         if self._raw_data is None:
-            from scitbx.array_family import flex
-
             self._raw_data = []
-
             cbf = self._get_cbf_handle()
             cbf.find_category("array_structure")
             cbf.find_column("encoding_type")
