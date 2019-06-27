@@ -7,9 +7,9 @@ from dxtbx.format.FormatNexus import FormatNexus
 from dxtbx.model import MultiAxisGoniometer
 
 try:
-    from dials.util.masking import GoniometerShadowMaskGenerator
+    from dials.util.masking import GoniometerMaskGeneratorFactory
 except ImportError:
-    GoniometerShadowMaskGenerator = False
+    GoniometerMaskGeneratorFactory = False
 
 
 class FormatNexusEigerDLS16MI04(FormatNexus):
@@ -29,7 +29,7 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         # this depends on DIALS for the goniometer shadow model; if missing
         # simply return False
 
-        if not GoniometerShadowMaskGenerator:
+        if not GoniometerMaskGeneratorFactory:
             return False
 
         # Get the file handle
@@ -94,10 +94,9 @@ class FormatNexusEigerDLS16MI04(FormatNexus):
         assert goniometer is not None
 
         if goniometer.get_names()[1] == "chi":
-            # SmarGon
-            from dials.util.masking.SmarGonShadowMask import SmarGonShadowMaskGenerator
-
-            return SmarGonShadowMaskGenerator(goniometer)
+            return GoniometerMaskGeneratorFactory.smargon(goniometer)
+        elif goniometer.get_names()[1] == "kappa":
+            return GoniometerMaskGeneratorFactory.mini_kappa(goniometer)
 
         else:
             raise RuntimeError(
