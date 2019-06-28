@@ -16,9 +16,9 @@ from dxtbx.format.FormatCBFMiniPilatus import FormatCBFMiniPilatus
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 try:
-    from dials.util.masking import GoniometerMaskGeneratorFactory
+    from dials.util.masking import GoniometerMaskerFactory
 except ImportError:
-    GoniometerMaskGeneratorFactory = False
+    GoniometerMaskerFactory = False
 
 
 class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
@@ -212,7 +212,7 @@ class FormatCBFMiniPilatusDLS12M(FormatCBFMiniPilatus):
     def get_goniometer_shadow_masker(self, goniometer=None):
         if goniometer is None:
             goniometer = self.get_goniometer()
-        return GoniometerMaskGeneratorFactory.dls_i23_kappa(goniometer)
+        return GoniometerMaskerFactory.dls_i23_kappa(goniometer)
 
     def get_mask(self, goniometer=None):
         from dxtbx.model import MultiAxisGoniometer

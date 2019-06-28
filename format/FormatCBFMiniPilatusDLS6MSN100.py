@@ -15,9 +15,9 @@ from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 try:
-    from dials.util.masking import GoniometerMaskGeneratorFactory
+    from dials.util.masking import GoniometerMaskerFactory
 except ImportError:
-    GoniometerMaskGeneratorFactory = False
+    GoniometerMaskerFactory = False
 
 
 class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
@@ -358,7 +358,7 @@ class FormatCBFMiniPilatusDLS6MSN100(FormatCBFMiniPilatus):
         return d
 
     def get_goniometer_shadow_masker(self, goniometer=None):
-        return GoniometerMaskGeneratorFactory.mini_kappa(goniometer)
+        return GoniometerMaskerFactory.mini_kappa(goniometer)
 
     def get_mask(self, goniometer=None):
         mask = super(FormatCBFMiniPilatusDLS6MSN100, self).get_mask()
