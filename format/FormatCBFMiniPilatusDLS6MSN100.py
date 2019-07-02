@@ -15,7 +15,7 @@ from dxtbx.format.FormatPilatusHelpers import determine_pilatus_mask
 from dxtbx.model import ParallaxCorrectedPxMmStrategy
 
 try:
-    from dials.util.masking import GoniometerMaskerFactory
+    from dxtbx.util.masking import GoniometerMaskerFactory
 except ImportError:
     GoniometerMaskerFactory = False
 
