@@ -13,8 +13,8 @@ from scitbx import matrix
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatPilatusHelpers import determine_eiger_mask
 from dxtbx.format.FormatPilatusHelpers import get_vendortype_eiger as gv
+from dxtbx.format.nexus import BeamFactory_ as BeamFactory
 from dxtbx.format.nexus import (
-    BeamFactory,
     DataFactory,
     DataFactoryCache,
     DetectorFactory,

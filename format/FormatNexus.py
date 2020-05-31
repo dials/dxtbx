@@ -7,8 +7,8 @@ import h5py
 from dxtbx.format.FormatHDF5 import FormatHDF5
 from dxtbx.format.FormatMultiImageLazy import FormatMultiImageLazy
 from dxtbx.format.FormatStill import FormatStill
+from dxtbx.format.nexus import BeamFactory_ as BeamFactory
 from dxtbx.format.nexus import (
-    BeamFactory,
     DataFactory,
     DetectorFactory,
     DetectorFactoryFromGroup,

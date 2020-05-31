@@ -10,13 +10,8 @@ from scitbx import matrix
 from scitbx.array_family import flex
 
 from dxtbx.format.FormatNexus import FormatNexus
-from dxtbx.format.nexus import (
-    BeamFactory,
-    DataFactory,
-    MaskFactory,
-    NXmxReader,
-    convert_units,
-)
+from dxtbx.format.nexus import BeamFactory_ as BeamFactory
+from dxtbx.format.nexus import DataFactory, MaskFactory, NXmxReader, convert_units
 from dxtbx.model import Detector, Panel, ParallaxCorrectedPxMmStrategy, Scan
 
 

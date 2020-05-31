@@ -538,6 +538,33 @@ class BeamFactory(object):
     A class to create a beam model from NXmx stuff
     """
 
+    def __init__(self, obj, index=None):
+        # Get the items from the NXbeam class
+        wavelength = obj.handle["incident_wavelength"]
+        wavelength_value = wavelength[()]
+        wavelength_units = wavelength.attrs["units"]
+
+        if (
+            index is not None
+            and hasattr(wavelength_value, "__iter__")
+            and len(wavelength_value) > 1
+        ):
+            wavelength_value = wavelength_value[index]
+
+        # Convert wavelength to Angstroms
+        wavelength_value = float(
+            convert_units(wavelength_value, wavelength_units, "angstrom")
+        )
+
+        # Construct the beam model
+        self.model = Beam(direction=(0, 0, 1), wavelength=wavelength_value)
+
+
+class BeamFactory_(object):
+    """
+    A class to create a beam model from NXmx stuff, backported from DIALS 3.0
+    """
+
     def __init__(self, obj):
         self.obj = obj
         self.model = None
