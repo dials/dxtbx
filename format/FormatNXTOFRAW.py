@@ -1,4 +1,5 @@
 import h5py
+from sys import argv
 from dxtbx.format.FormatHDF5 import FormatHDF5
 
 class FormatNXTOFRAW(FormatHDF5):
@@ -8,10 +9,13 @@ class FormatNXTOFRAW(FormatHDF5):
     https://www.nexusformat.org/TOFRaw.html
     """
 
+    def __init__(self, image_file):
+        self.reader = NXTOFRAWReader(image_file)
+
     @staticmethod
     def understand(image_file):
         try:
-            return is_nxtofraw_file(image_file)
+            return FormatNXTOFRAW.is_nxtofraw_file(image_file)
         except IOError:
             return False
 
@@ -24,29 +28,51 @@ class FormatNXTOFRAW(FormatHDF5):
 
         """
 
-        def field_in_file(field, image_file):
-
-            def field_in_file_recursive(field, nxs_obj):
-                if field in nxs_obj.name.split("/"):
-                    return True
-                else:
-                    if isinstance(nxs_obj, h5py.Group):
-                        for i in nxs_obj.values():
-                            if field_in_file_recursive(field, i):
-                                return True
-                    return False
-
-            for i in image_file.values():
-                if field_in_file_recursive(field, i):
-                    return True
-            return False
-                
+        required_fields = ["detector_1"]
 
         def required_fields_present(required_fields, image_file):
-            for i in required_fields:
-                if not field_in_field(i, image_file):
-                    return False
-            return True
+            with h5py.File(image_file, "r") as handle:
+                for i in required_fields:
+                    if not NXTOFRAWReader.field_in_file(i, handle):
+                        return False
+                return True
+
+
+        if not FormatHDF5.understand(image_file):
+            return False
+
+        return required_fields_present(required_fields, image_file)
 
 
 
+class NXTOFRAWReader:
+    
+    def __init__(self, nxs_filename):
+        self.nxs_filename = nxs_filename
+        self.nxs_file = self.open_nxs_file(nxs_filename)
+
+    def open_nxs_file(self, nxs_file):
+        return h5py.File(nxs_file, "r")
+
+    @staticmethod
+    def field_in_file(field, nxs_file):
+
+        def field_in_file_recursive(field, nxs_obj):
+            if field in nxs_obj.name.split("/"):
+                return True
+            else:
+                if isinstance(nxs_obj, h5py.Group):
+                    for i in nxs_obj.values():
+                        if field_in_file_recursive(field, i):
+                            return True
+                return False
+
+        for i in nxs_file.values():
+            if field_in_file_recursive(field, i):
+                return True
+        return False
+
+
+if __name__== "__main__":
+    for arg in argv[1:]:
+        print(FormatNXTOFRAW.understand(arg))
