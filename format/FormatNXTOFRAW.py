@@ -11,6 +11,7 @@ class FormatNXTOFRAW(FormatHDF5):
 
     def __init__(self, image_file):
         self.reader = NXTOFRAWReader(image_file)
+        self.detector = self.reader.get_detector()
 
     @staticmethod
     def understand(image_file):
@@ -24,7 +25,7 @@ class FormatNXTOFRAW(FormatHDF5):
 
         """
         Confirms if image_file conforms to NXTOFRAW format
-        by checking if required_fields are present with reasonable values.
+        by checking if required_fields are present
 
         """
 
@@ -46,6 +47,11 @@ class FormatNXTOFRAW(FormatHDF5):
 
 
 class NXTOFRAWReader:
+
+    """
+    Class to hold NXTOFRAW files in memory
+    and convert NXTOFRAW values to formats useful for FormatNXTOFRAW
+    """
     
     def __init__(self, nxs_filename):
         self.nxs_filename = nxs_filename
@@ -71,6 +77,11 @@ class NXTOFRAWReader:
             if field_in_file_recursive(field, i):
                 return True
         return False
+
+    def get_detector(self):
+        return self.nxs_file['/raw_data_1/detector_1']
+
+
 
 
 if __name__== "__main__":
