@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division, print_function
 import h5py
 from sys import argv
 from dxtbx.format.FormatHDF5 import FormatHDF5
@@ -7,6 +8,10 @@ class FormatNXTOFRAW(FormatHDF5):
     """
     Class to read NXTOFRAW files as defined in
     https://www.nexusformat.org/TOFRaw.html
+
+    See also 
+    https://manual.nexusformat.org/classes/applications/NXtofraw.html
+
     """
 
     def __init__(self, image_file):
@@ -81,7 +86,8 @@ class NXTOFRAWReader:
     def get_detector(self):
         return self.nxs_file['/raw_data_1/detector_1']
 
-
+    def get_name(self):
+        return nxs_file['/raw_data_1/name'][0].decode()
 
 
 if __name__== "__main__":
