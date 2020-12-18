@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 from sys import argv
 import h5py
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW, NXTOFRAWReader
+from dxtbx.model import Detector
 
 class FormatISISSXD(FormatNXTOFRAW):
 
@@ -41,6 +42,48 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         return get_name(image_file) == "SXD"
 
+
+    def _get_detector(self):
+
+        """
+        Returns a  Detector instance with parameters taken from 
+        https://doi.org/10.1107/S0021889806025921
+
+        """
+
+        num_panels = 11
+        panel_type = "coupled_scintillator_PSD"
+        image_size = (64, 64)
+        pixel_size = (3, 3)
+        longitude = (142.5, 90.0, 37.5, -37.5, -90.0, -142.5,
+                    90.0, 0.0, -90.0, 180.0, 0.0)
+        latitude = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    -45.0, -45.0, -45.0, -45.0, -90.0)
+        l2 = (225, 225, 225, 225, 225, 225,
+              270, 270, 270, 270, 280)
+        trusted_range(-1, 100000)
+
+        # Image positions are offset by 4 
+        # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
+        img_offsets = [(((4096 * i) + (i*4)), ((4096 * (i+1)) + (i * 4))) for i in range(11)]
+
+
+        detector = Detector()
+        root = detector.hierarchy()
+
+        for i in range(num_panels):
+            panel = root.add_panel()
+            panel.set_name("%02d" % i + 1)
+            panel.set_type(panel_type)
+            panel.set_raw_image_offset(img_offsets[i])
+            panel.set_trusted_range(trusted_range)
+            panel.set_pixel_size(pixel_size)
+            
+            
+
+            
+
+ 
 
 
 if __name__== "__main__":
