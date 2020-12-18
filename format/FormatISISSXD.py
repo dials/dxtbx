@@ -4,6 +4,7 @@ import h5py
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
 from dxtbx.model import Detector
 from dxtbx import IncorrectFormatError
+import numpy as np
 
 class FormatISISSXD(FormatNXTOFRAW):
 
@@ -14,7 +15,7 @@ class FormatISISSXD(FormatNXTOFRAW):
     """
 
     def __init__(self, image_file):
-        super().__init__(self, image_file)
+        super().__init__(image_file)
         if not FormatISISSXD.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         self.nxs_file = self.open_file(image_file)
@@ -115,7 +116,7 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_type(self):
         return "coupled_scintillator_PSD"
 
-    def _get_wavelength_bins_in_ang(self, L0, L, time_channels):
+    def _get_tof_wavelength_in_ang(self, L0, L, time_channels):
         h = 6.626E-34
         m_n = 1.675E-27
         return [((h * i)/(m_n * (L0 + L)))*10**10 for i in time_channels]
@@ -125,11 +126,25 @@ class FormatISISSXD(FormatNXTOFRAW):
         return self.nxs_file['raw_data_1']['detector_1']['counts'][:][0]
 
     def _get_panel_images(self):
+
         raw_data = self._get_raw_spectra_array()
-        # Image positions are offset by 4 
+
+        # Panel positions are offset by 4 in raw_data array
         # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
         offsets =  [(((4096 * i) + (i*4)), ((4096 * (i+1)) + (i * 4))) for i in range(11)]
-        return [raw_data[i[0] : i[1], :].T for i in offsets]
+        panel_raw_data = [raw_data[i[0] : i[1], :] for i in offsets]
+        
+        # To match SXD2001 viewer, images must be transposed
+        panel_size = self._get_panel_size_in_pixels()
+        time_channel_size = len(self._get_time_channels_in_seconds())
+        array_shape = (panel_size[0], panel_size[1], time_channel_size)
+        return [np.transpose(i.reshape(array_shape), (1,0,2)) for i in panel_raw_data]
+
+    def _get_panel_wavelengths(self):
+        l2_vals = self._get_panel_l2_vals_in_metres()
+        l0 = self._get_primary_flight_path_in_metres()
+        tof = self._get_time_channels_in_seconds()
+        return [self._get_tof_wavelength_in_ang(l0, i, tof) for i in l2_vals]
          
 if __name__== "__main__":
     for arg in argv[1:]:
