@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 from sys import argv
 import h5py
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
-from dxtbx.model import Detector
+from dxtbx.model import Detector, SimplePxMmStrategy
 from dxtbx import IncorrectFormatError
 import numpy as np
 
@@ -58,24 +58,24 @@ class FormatISISSXD(FormatNXTOFRAW):
 
         """
 
-        num_panels = 11
-        panel_type = "coupled_scintillator_PSD"
-        image_size = (64, 64)
-        pixel_size = (3, 3)
+        num_panels = self._get_num_panels() 
+        panel_names = self._get_panel_names()
+        panel_type = self._get_panel_type()
+        image_size = self._get_image_size_in_px()
         trusted_range(-1, 100000)
-
-
+        pixel_size = self._get_pixel_size_in_mm()
 
         detector = Detector()
         root = detector.hierarchy()
 
         for i in range(num_panels):
             panel = root.add_panel()
-            panel.set_name("%02d" % i + 1)
             panel.set_type(panel_type)
-            panel.set_raw_image_offset(img_offsets[i])
+            panel.set_name(panel_names[i])
+            panel.set_image_size(image_size)
             panel.set_trusted_range(trusted_range)
             panel.set_pixel_size(pixel_size)
+            panel.set_px_mm_strategy(SimplePxMmStrategy)
 
     """
     Hardcoded values not contained in the self.nxs_file are taken from
@@ -89,7 +89,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         bins = self._get_time_channel_bins()
         return [(bins[i] + bins[i+1])*.5*10**-6 for i in range(len(bins) - 1)]
 
-    def _get_primary_flight_path_in_metres(self):
+    def _get_primary_flight_path_in_m(self):
         return 8.3
 
     def _get_num_panels(self):
@@ -98,7 +98,7 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_names(self):
         return ["%02d" % (i + 1) for i in range(11)]
 
-    def _get_panel_l2_vals_in_metres(self):
+    def _get_panel_l2_vals_in_m(self):
         return (.225, .225, .225, .225, .225, .225, .270, .270, .270, .270, .280)
 
     def _get_panel_longitude_in_deg(self):
@@ -107,7 +107,7 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_latitude_in_deg(self):
         return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -45.0, -45.0, -45.0, -45.0, -90.0)
 
-    def _get_panel_size_in_pixels(self):
+    def _get_panel_size_in_px(self):
         return (64, 64)
     
     def _get_panel_pixel_size_in_mm(self):
@@ -135,14 +135,14 @@ class FormatISISSXD(FormatNXTOFRAW):
         panel_raw_data = [raw_data[i[0] : i[1], :] for i in offsets]
         
         # To match SXD2001 viewer, images must be transposed
-        panel_size = self._get_panel_size_in_pixels()
+        panel_size = self._get_panel_size_in_px()
         time_channel_size = len(self._get_time_channels_in_seconds())
         array_shape = (panel_size[0], panel_size[1], time_channel_size)
         return [np.transpose(i.reshape(array_shape), (1,0,2)) for i in panel_raw_data]
 
     def _get_panel_wavelengths(self):
-        l2_vals = self._get_panel_l2_vals_in_metres()
-        l0 = self._get_primary_flight_path_in_metres()
+        l2_vals = self._get_panel_l2_vals_in_m()
+        l0 = self._get_primary_flight_path_in_m()
         tof = self._get_time_channels_in_seconds()
         return [self._get_tof_wavelength_in_ang(l0, i, tof) for i in l2_vals]
          
