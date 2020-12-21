@@ -139,10 +139,21 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_type(self):
         return "coupled_scintillator_PSD"
 
-    def _get_tof_wavelength_in_ang(self, L0, L, time_channels):
+    def _get_tof_wavelength_in_ang(self, L0, L, tof):
         h = 6.626E-34
         m_n = 1.675E-27
-        return [((h * i)/(m_n * (L0 + L)))*10**10 for i in time_channels]
+        return ((h * tof)/(m_n * (L0 + L)))*10**10
+
+    def _get_pixel_wavelength_in_ang(self, x, y, tof, 
+                                     L0, centroid_l, pixel_size_in_mm, panel_size_in_px):
+        
+        panel_centroid = (panel_size_in_px[0]/2., panel_size_in_px[1]/2.)
+        rel_x = abs(x - panel_centroid[0]) * pixel_size_in_mm[0] *10**-3
+        rel_y = abs(y - panel_centroid[1]) * pixel_size_in_mm[1] *10**-3
+        rel_pos = np.sqrt(np.square(rel_x) + np.square(rel_y))
+        rel_L = np.sqrt(np.square(rel_pos) + np.square(centroid_l))
+        
+        return self._get_tof_wavelength_in_ang(L0, rel_L, tof)
 
     def _get_raw_spectra_array(self):
         # Returns 2D array of (pixels, time_channels) for all 11 detectors
@@ -169,22 +180,6 @@ class FormatISISSXD(FormatNXTOFRAW):
         array_shape = (panel_size[0], panel_size[1], time_channel_size)
         return [np.transpose(i.reshape(array_shape), (1,0,2)) for i in panel_raw_data]
 
-    def _get_panel_wavelengths(self):
-        pixel_size_in_mm = self._get_pixel_size_in_mm()
-        panel_size_in_px = self._get_panel_size_in_px()   
-        l2_panels = self._get_panel_l2_vals_in_m(self, pixel_size_in_mm, panel_size_in_px)
-        tof = self._get_time_channels_in_seconds()
-        wavelength_panels = [np.zeros((panel_size_in_px[0], 
-                            panel_size_in_px[1], len(tof))) \
-                            for i in len(l2_panels)]
-
-        l0 = self._get_primary_flight_path_in_m()
-        for panel in wavelength_panels:
-            for x in range(panel.shape[0]):
-                for y in range(panel.shape[1]):
-                    panel[x,y,:] = self._get_tof_wavelength_in_ang(l0, l2_panels[x,y], tof)
-
-        return wavelength_panels
          
 if __name__== "__main__":
     for arg in argv[1:]:
