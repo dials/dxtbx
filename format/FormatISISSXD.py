@@ -83,7 +83,8 @@ class FormatISISSXD(FormatNXTOFRAW):
     """
 
     def _get_time_channel_bins(self):
-        return self.nxs_file['raw_data_1']['instrument']['dae']['time_channels_1']['time_of_flight'][:]
+        return \
+        self.nxs_file['raw_data_1']['instrument']['dae']['time_channels_1']['time_of_flight'][:]
 
     def _get_time_channels_in_seconds(self):
         bins = self._get_time_channel_bins()
@@ -98,9 +99,31 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_names(self):
         return ["%02d" % (i + 1) for i in range(11)]
 
-    def _get_panel_l2_vals_in_m(self):
+    def _get_centroid_panel_l2_vals_in_m(self):
         return (.225, .225, .225, .225, .225, .225, .270, .270, .270, .270, .280)
 
+    def _get_panel_l2_vals_in_m(self, pixel_size_in_mm, panel_size_in_px):
+        centroid_l2_vals = self._get_centroid_panel_l2_vals_in_m()
+        centroid = (panel_size_in_px[0]/2, panel_size_in_px[1]/2)
+
+        panel = np.arange(-centroid[0],  centroid[1]).reshape(panel_size_in_px) 
+        mm_x = pixel_size_in_mm[0]/1000.
+        mm_y = pizel_size_in_mm[1]/1000.       
+
+        for x in range(panel.shape[0]):
+            for y in range(panel.shape[1]):
+                panel[x,y] = np.sqrt(np.square(x * mm_x) + np.square(y * mm_y))        
+
+        panels = [np.copy(panel) for i in range(len(centroid_l2_vals))]
+        
+        for p, panel in enumerate(panels):
+            l2_val = centroid_l2_vals[p]
+            for x in range(panel.shape[0]):
+                for y in range(panel.shape[1]):
+                    panel[x,y] = np.sqrt(np.square(l2_val) + np.square(panel[x,y]))
+
+        return panels
+            
     def _get_panel_longitude_in_deg(self):
         return (142.5, 90.0, 37.5, -37.5, -90.0, -142.5, 90.0, 0.0, -90.0, 180.0, 0.0)
            
@@ -127,11 +150,17 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def _get_panel_images(self):
 
+        """
+        Returns a list of arrays (x_num_px, y_num_px, num_time_channels)
+        for each panel, ordered from 1-11
+        """
         raw_data = self._get_raw_spectra_array()
 
         # Panel positions are offset by 4 in raw_data array
         # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
-        offsets =  [(((4096 * i) + (i*4)), ((4096 * (i+1)) + (i * 4))) for i in range(11)]
+        panel_size = self._get_panel_size_in_px()
+        total_px = panel_size[0] * panel_size[1]
+        offsets =  [(((total_px * i) + (i*4)), ((total_px * (i+1)) + (i * 4))) for i in range(11)]
         panel_raw_data = [raw_data[i[0] : i[1], :] for i in offsets]
         
         # To match SXD2001 viewer, images must be transposed
@@ -141,10 +170,21 @@ class FormatISISSXD(FormatNXTOFRAW):
         return [np.transpose(i.reshape(array_shape), (1,0,2)) for i in panel_raw_data]
 
     def _get_panel_wavelengths(self):
-        l2_vals = self._get_panel_l2_vals_in_m()
-        l0 = self._get_primary_flight_path_in_m()
+        pixel_size_in_mm = self._get_pixel_size_in_mm()
+        panel_size_in_px = self._get_panel_size_in_px()   
+        l2_panels = self._get_panel_l2_vals_in_m(self, pixel_size_in_mm, panel_size_in_px)
         tof = self._get_time_channels_in_seconds()
-        return [self._get_tof_wavelength_in_ang(l0, i, tof) for i in l2_vals]
+        wavelength_panels = [np.zeros((panel_size_in_px[0], 
+                            panel_size_in_px[1], len(tof))) \
+                            for i in len(l2_panels)]
+
+        l0 = self._get_primary_flight_path_in_m()
+        for panel in wavelength_panels:
+            for x in range(panel.shape[0]):
+                for y in range(panel.shape[1]):
+                    panel[x,y,:] = self._get_tof_wavelength_in_ang(l0, l2_panels[x,y], tof)
+
+        return wavelength_panels
          
 if __name__== "__main__":
     for arg in argv[1:]:
