@@ -2,7 +2,15 @@ from __future__ import absolute_import, division, print_function
 from sys import argv
 import h5py
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
-from dxtbx.model import Detector, SimplePxMmStrategy
+from dxtbx.format.FormatMultiImage import FormatMultiImage
+from dxtbx.model import (
+Beam,
+Detector, 
+Panel,
+Goniometer,
+Scan,
+SimplePxMmStrategy)
+from dxtbx.model.scan import ScanFactory
 from dxtbx import IncorrectFormatError
 import numpy as np
 
@@ -14,11 +22,12 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     """
 
-    def __init__(self, image_file):
+    def __init__(self, image_file, **kwargs):
         super().__init__(image_file)
         if not FormatISISSXD.understand(image_file):
             raise IncorrectFormatError(self, image_file)
         self.nxs_file = self.open_file(image_file)
+        self.detector = None
 
     def open_file(self, image_file):
         return h5py.File(image_file, "r")
@@ -61,9 +70,9 @@ class FormatISISSXD(FormatNXTOFRAW):
         num_panels = self._get_num_panels() 
         panel_names = self._get_panel_names()
         panel_type = self._get_panel_type()
-        image_size = self._get_image_size_in_px()
-        trusted_range(-1, 100000)
-        pixel_size = self._get_pixel_size_in_mm()
+        image_size = self._get_panel_size_in_px()
+        trusted_range = (-1, 100000)
+        pixel_size = self._get_panel_pixel_size_in_mm()
 
         detector = Detector()
         root = detector.hierarchy()
@@ -75,7 +84,9 @@ class FormatISISSXD(FormatNXTOFRAW):
             panel.set_image_size(image_size)
             panel.set_trusted_range(trusted_range)
             panel.set_pixel_size(pixel_size)
-            panel.set_px_mm_strategy(SimplePxMmStrategy)
+            #panel.set_px_mm_strategy(SimplePxMmStrategy)
+
+        return detector
 
     """
     Hardcoded values not contained in the self.nxs_file are taken from
@@ -127,6 +138,41 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_longitude_in_deg(self):
         return (142.5, 90.0, 37.5, -37.5, -90.0, -142.5, 90.0, 0.0, -90.0, 180.0, 0.0)
            
+    def get_num_images(self):
+        return  len(self._get_time_channels_in_seconds())
+        #return len(self._get_time_channels_in_seconds()) * self._get_num_panels()
+
+    """
+    @classmethod
+    def get_imageset(self, filename, format_kwargs):
+        single_file_indices = [i for i in range(1821)]
+        return FormatMultiImage.get_imageset(filename, 
+                as_sequence=True, single_file_indices=single_file_indices,
+                format_kwargs=format_kwargs)
+    """
+    def get_beam(self, idx=None):
+        return Beam() 
+
+    def get_detector(self, idx=None):
+        return self._get_detector() 
+
+    def get_scan(self, idx=None):
+        image_range = (1, self.get_num_images())
+        exposure_times = 0.0
+        oscillation = (0.0, 0.0)
+        epochs = [0 for i in range(self.get_num_images())]
+        
+        d = {"image_range":(0, self.get_num_images()),
+                "oscillation":(0.0, 0.0),
+                "num_images" : self.get_num_images(),
+                "batch_offset" : 0,
+                "is_still" : True}
+        return ScanFactory.make_scan(image_range, exposure_times,
+                                    oscillation, epochs) 
+
+    def get_goniometer(self, idx=None):
+        return Goniometer()
+
     def _get_panel_latitude_in_deg(self):
         return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -45.0, -45.0, -45.0, -45.0, -90.0)
 
@@ -154,6 +200,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         rel_L = np.sqrt(np.square(rel_pos) + np.square(centroid_l))
         
         return self._get_tof_wavelength_in_ang(L0, rel_L, tof)
+
 
     def _get_raw_spectra_array(self):
         # Returns 2D array of (pixels, time_channels) for all 11 detectors
