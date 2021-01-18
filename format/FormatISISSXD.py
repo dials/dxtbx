@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 from sys import argv
 import h5py
+from dials.array_family import flex
 from dxtbx.format.FormatNXTOFRAW import FormatNXTOFRAW
 from dxtbx.format.FormatMultiImage import FormatMultiImage
 from dxtbx.model import (
@@ -28,6 +29,7 @@ class FormatISISSXD(FormatNXTOFRAW):
             raise IncorrectFormatError(self, image_file)
         self.nxs_file = self.open_file(image_file)
         self.detector = None
+        self.raw_data = None
 
     def open_file(self, image_file):
         return h5py.File(image_file, "r")
@@ -58,6 +60,49 @@ class FormatISISSXD(FormatNXTOFRAW):
             return False
 
         return get_name(image_file) == "SXD"
+
+    def load_raw_data(self):
+            
+        def get_detector_idx_array(detector_number, image_size, idx_offset):
+            total_pixels = image_size[0] * image_size[1]  
+            min_range = (total_pixels * (detector_number - 1)) + (idx_offset* (detector_number-1))
+            max_range = min_range + total_pixels
+            return np.arange(min_range, max_range).reshape(image_size).T
+                                                            
+        raw_counts = self.nxs_file['raw_data_1']['detector_1']['counts'][:][0]
+        num_panels = self._get_num_panels() 
+        image_size = self._get_panel_size_in_px()
+        
+        # Index offset in SXD data 
+        # See p24 of https://www.isis.stfc.ac.uk/Pages/sxd-user-guide6683.pdf
+        idx_offset = 4
+
+        num_images = self.get_num_images() 
+        raw_data = []
+                                                                            
+        for i in range(1, num_panels + 1):
+            idx_array = get_detector_idx_array(i, image_size, idx_offset)
+            panel_array = np.zeros((idx_array.shape[0], idx_array.shape[1], num_images))
+            for c_i, i in enumerate(idx_array):
+                for c_j, j in enumerate(i):
+                    panel_array[c_i, c_j, :] = raw_counts[j,:]
+            flex_array = flex.double(np.ascontiguousarray(panel_array))
+            flex_array.reshape(flex.grid(panel_array.shape))
+            raw_data.append(flex_array)
+                                                                                                                                                                
+        return tuple(raw_data)
+
+    def get_raw_data(self, index):
+        if self.raw_data is None:
+            self.raw_data = self.load_raw_data()
+
+        raw_data_idx = []
+        for i in self.raw_data:
+            arr = i[:, :, index:index+1]
+            arr.reshape(flex.grid(i.all()[0], i.all()[1]))
+            raw_data_idx.append(arr)
+
+        return tuple(raw_data_idx)
 
 
     def _get_detector(self):
@@ -140,7 +185,6 @@ class FormatISISSXD(FormatNXTOFRAW):
            
     def get_num_images(self):
         return  len(self._get_time_channels_in_seconds())
-        #return len(self._get_time_channels_in_seconds()) * self._get_num_panels()
 
     """
     @classmethod
@@ -158,9 +202,9 @@ class FormatISISSXD(FormatNXTOFRAW):
 
     def get_scan(self, idx=None):
         image_range = (1, self.get_num_images())
-        exposure_times = 0.0
-        oscillation = (0.0, 0.0)
-        epochs = [0 for i in range(self.get_num_images())]
+        exposure_times = 1
+        oscillation = (0.0, 1.0)
+        epochs = [i for i in range(self.get_num_images())]
         
         d = {"image_range":(0, self.get_num_images()),
                 "oscillation":(0.0, 0.0),
