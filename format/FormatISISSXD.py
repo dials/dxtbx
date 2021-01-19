@@ -118,7 +118,9 @@ class FormatISISSXD(FormatNXTOFRAW):
         image_size = self._get_panel_size_in_px()
         trusted_range = (-1, 100000)
         pixel_size = self._get_panel_pixel_size_in_mm()
-
+        fast_axis = (1, 0, 0)
+        slow_axis = (0, 1, 0)
+        panel_origins = self._get_panel_origins()
         detector = Detector()
         root = detector.hierarchy()
 
@@ -129,6 +131,7 @@ class FormatISISSXD(FormatNXTOFRAW):
             panel.set_image_size(image_size)
             panel.set_trusted_range(trusted_range)
             panel.set_pixel_size(pixel_size)
+            panel.set_local_frame(fast_axis, slow_axis, panel_origins[i])
             #panel.set_px_mm_strategy(SimplePxMmStrategy)
 
         return detector
@@ -158,6 +161,21 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_centroid_panel_l2_vals_in_m(self):
         return (.225, .225, .225, .225, .225, .225, .270, .270, .270, .270, .280)
 
+    def _get_panel_origins(self):
+        return (
+            (48.9, -96.0, -217.9),
+            (195.7, -96.0, -88.3),
+            (195.7, -96.0, 110.4),
+            (-48.9, -96.0, 217.9),
+            (-195.7, -96.0, 88.3),
+            (-229.2, -96.0, -146.8),
+            (114.6, -258.8, -41.2),
+            (28.7, -258.8, 115.9),
+            (-114.6, -258.8, 41.2),
+            (-28.7, -258.8, -115.9),
+            (-29.6, -280.0, -90.8)
+            )
+
     def _get_panel_l2_vals_in_m(self, pixel_size_in_mm, panel_size_in_px):
         centroid_l2_vals = self._get_centroid_panel_l2_vals_in_m()
         centroid = (panel_size_in_px[0]/2, panel_size_in_px[1]/2)
@@ -186,14 +204,6 @@ class FormatISISSXD(FormatNXTOFRAW):
     def get_num_images(self):
         return  len(self._get_time_channels_in_seconds())
 
-    """
-    @classmethod
-    def get_imageset(self, filename, format_kwargs):
-        single_file_indices = [i for i in range(1821)]
-        return FormatMultiImage.get_imageset(filename, 
-                as_sequence=True, single_file_indices=single_file_indices,
-                format_kwargs=format_kwargs)
-    """
     def get_beam(self, idx=None):
         return Beam() 
 
@@ -205,12 +215,6 @@ class FormatISISSXD(FormatNXTOFRAW):
         exposure_times = 1
         oscillation = (0.0, 1.0)
         epochs = [i for i in range(self.get_num_images())]
-        
-        d = {"image_range":(0, self.get_num_images()),
-                "oscillation":(0.0, 0.0),
-                "num_images" : self.get_num_images(),
-                "batch_offset" : 0,
-                "is_still" : True}
         return ScanFactory.make_scan(image_range, exposure_times,
                                     oscillation, epochs) 
 
@@ -227,7 +231,7 @@ class FormatISISSXD(FormatNXTOFRAW):
         return (3, 3)
 
     def _get_panel_type(self):
-        return "coupled_scintillator_PSD"
+        return "SENSOR_PAD"
 
     def _get_tof_wavelength_in_ang(self, L0, L, tof):
         h = 6.626E-34
