@@ -118,8 +118,8 @@ class FormatISISSXD(FormatNXTOFRAW):
         image_size = self._get_panel_size_in_px()
         trusted_range = (-1, 100000)
         pixel_size = self._get_panel_pixel_size_in_mm()
-        fast_axis = (1, 0, 0)
-        slow_axis = (0, 1, 0)
+        fast_axes = self._get_panel_fast_axes()
+        slow_axes = self._get_panel_slow_axes()
         panel_origins = self._get_panel_origins()
         detector = Detector()
         root = detector.hierarchy()
@@ -131,7 +131,7 @@ class FormatISISSXD(FormatNXTOFRAW):
             panel.set_image_size(image_size)
             panel.set_trusted_range(trusted_range)
             panel.set_pixel_size(pixel_size)
-            panel.set_local_frame(fast_axis, slow_axis, panel_origins[i])
+            panel.set_local_frame(fast_axes[i], slow_axes[i], panel_origins[i])
             #panel.set_px_mm_strategy(SimplePxMmStrategy)
 
         return detector
@@ -158,49 +158,57 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_names(self):
         return ["%02d" % (i + 1) for i in range(11)]
 
-    def _get_centroid_panel_l2_vals_in_m(self):
-        return (.225, .225, .225, .225, .225, .225, .270, .270, .270, .270, .280)
+    def _get_panel_origin_l2_vals_in_mm(self):
+        return (262.787, 262.787, 262.787, 262.787,
+                262.787, 302.212, 302.212, 302.212,
+                302.212, 302.212, 311.178
+                )
 
     def _get_panel_origins(self):
         return (
-            (48.9, -96.0, -217.9),
-            (195.7, -96.0, -88.3),
-            (195.7, -96.0, 110.4),
-            (-48.9, -96.0, 217.9),
-            (-195.7, -96.0, 88.3),
-            (-229.2, -96.0, -146.8),
-            (114.6, -258.8, -41.2),
-            (28.7, -258.8, 115.9),
-            (-114.6, -258.8, 41.2),
-            (-28.7, -258.8, -115.9),
-            (-29.6, -280.0, -90.8)
+            (60.084, 103.128, -234.119),
+            (222.316, 103.128, -94.855),
+            (210.590, 103.128, 118.631),
+            (-60.084, 103.128, 234.119),
+            (-222.316, 103.128, 94.855),
+            (-239.008, 101.244, -154.780),
+            (257.166, -129.757, -91.437),
+            (91.437, -129.757, 257.166),
+            (-257.166, -129.757, 91.437),
+            (-91.437, -129.757, -257.166),
+            (32.732, -294.358, 95.467)
             )
 
-    def _get_panel_l2_vals_in_m(self, pixel_size_in_mm, panel_size_in_px):
-        centroid_l2_vals = self._get_centroid_panel_l2_vals_in_m()
-        centroid = (panel_size_in_px[0]/2, panel_size_in_px[1]/2)
+    def _get_panel_slow_axes(self):
+        return (
+            (0.000, -1.000, 0.000),
+            (0.000, -1.000, 0.000),
+            (0.000, -1.000, 0.000),
+            (0.000, -1.000, 0.000),
+            (0.000, -1.000, 0.000),
+            (0.000, -1.000, 0.000),
+            (-0.707, -0.707, 0.000),
+            (0.000, -0.707, -0.707),
+            (0.707, -0.707, 0.000),
+            (0.000, -0.707, 0.707),
+            (0.000, 0.000, -1.000),
+            )
 
-        panel = np.arange(-centroid[0],  centroid[1]).reshape(panel_size_in_px) 
-        mm_x = pixel_size_in_mm[0]/1000.
-        mm_y = pizel_size_in_mm[1]/1000.       
+    def _get_panel_fast_axes(self):
+        return (
+            (0.793, 0.000, 0.609),
+            (0.000, 0.000, 1.000),
+            (-0.793, 0.000, 0.609),
+            (-0.793, 0.000, -0.609),
+            (0.000, 0.000, -1.000),
+            (0.793, 0.000, -0.609),
+            (0.000, 0.000, 1.000),
+            (-1.000, 0.000, 0.000),
+            (0.000, 0.000, -1.000),
+            (1.000, 0.000, 0.000),
+            (-1.000, 0.000, 0.000)
+            )
 
-        for x in range(panel.shape[0]):
-            for y in range(panel.shape[1]):
-                panel[x,y] = np.sqrt(np.square(x * mm_x) + np.square(y * mm_y))        
-
-        panels = [np.copy(panel) for i in range(len(centroid_l2_vals))]
-        
-        for p, panel in enumerate(panels):
-            l2_val = centroid_l2_vals[p]
-            for x in range(panel.shape[0]):
-                for y in range(panel.shape[1]):
-                    panel[x,y] = np.sqrt(np.square(l2_val) + np.square(panel[x,y]))
-
-        return panels
-            
-    def _get_panel_longitude_in_deg(self):
-        return (142.5, 90.0, 37.5, -37.5, -90.0, -142.5, 90.0, 0.0, -90.0, 180.0, 0.0)
-           
     def get_num_images(self):
         return  len(self._get_time_channels_in_seconds())
 
@@ -221,9 +229,6 @@ class FormatISISSXD(FormatNXTOFRAW):
     def get_goniometer(self, idx=None):
         return Goniometer()
 
-    def _get_panel_latitude_in_deg(self):
-        return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -45.0, -45.0, -45.0, -45.0, -90.0)
-
     def _get_panel_size_in_px(self):
         return (64, 64)
     
@@ -233,21 +238,20 @@ class FormatISISSXD(FormatNXTOFRAW):
     def _get_panel_type(self):
         return "SENSOR_PAD"
 
-    def _get_tof_wavelength_in_ang(self, L0, L, tof):
+    def _get_tof_wavelength_in_ang(self, L0_in_m, L_in_m, tof_in_s):
         h = 6.626E-34
         m_n = 1.675E-27
-        return ((h * tof)/(m_n * (L0 + L)))*10**10
+        return ((h * tof_in_s)/(m_n * (L0_in_m + L_in_m)))*np.power(10,10)
 
-    def _get_pixel_wavelength_in_ang(self, x, y, tof, 
-                                     L0, centroid_l, pixel_size_in_mm, panel_size_in_px):
-        
-        panel_centroid = (panel_size_in_px[0]/2., panel_size_in_px[1]/2.)
-        rel_x = abs(x - panel_centroid[0]) * pixel_size_in_mm[0] *10**-3
-        rel_y = abs(y - panel_centroid[1]) * pixel_size_in_mm[1] *10**-3
-        rel_pos = np.sqrt(np.square(rel_x) + np.square(rel_y))
-        rel_L = np.sqrt(np.square(rel_pos) + np.square(centroid_l))
-        
-        return self._get_tof_wavelength_in_ang(L0, rel_L, tof)
+    def _get_pixel_wavelength_in_ang(x, y, tof, panel_idx):
+
+        pixel_size_in_mm = self._get_panel_pixel_size_in_mm()
+        x *= pixel_size_in_mm[0] 
+        y *= pixel_size_in_mm[1] 
+        pos = np.sqrt(np.square(x) + np.square(y))
+        origin_l_in_mm = self._get_panel_origins()
+        rel_L = np.sqrt(np.square(pos) + np.square(origin_l_in_mm))
+        return self._get_tof_wavelength_in_ang(L0 * np.power(10.,-3), rel_L * np.power(10.,-3), tof)
 
 
     def _get_raw_spectra_array(self):
