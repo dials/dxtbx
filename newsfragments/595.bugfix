@@ -1,1 +1,1 @@
-Fix trusted range in FormatCBFMultiTile and FormatCBFMultiTileHierarchy.
+Fix trusted range in ``FormatCBFMultiTile`` and ``FormatCBFMultiTileHierarchy``.

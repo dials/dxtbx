@@ -1,1 +1,1 @@
-Fix dxtbx.plot_detector_models for new versions of matplotlib
+``dxtbx.plot_detector_models`` now works with newer versions of matplotlib.
