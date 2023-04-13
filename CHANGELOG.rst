@@ -1,3 +1,18 @@
+DIALS 3.13.1 (2023-04-13)
+=========================
+
+Bugfixes
+--------
+
+- Flumpy: Prefer to return ``flex.int`` instead of ``flex.long`` when these are the same size. This solves ambiguous behaviour when reading images on Windows platforms. (`#607 <https://github.com/cctbx/dxtbx/issues/607>`_)
+
+
+Misc
+----
+
+- `#609 <https://github.com/cctbx/dxtbx/issues/609>`_
+
+
 dxtbx 3.13.0 (2023-01-26)
 =========================
 
