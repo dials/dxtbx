@@ -1,2 +1,1 @@
-FormatCBFFull: if rotation angles are decreasing not increasing we invert the angles, now invert rotation axis as well.
-
+FormatCBFFull: If rotation angles are decreasing, then invert the rotation axis as well as the angles, to be consistent.

@@ -1,1 +1,1 @@
-Bugfix for environments without conda
+Bugfix for CCTBX bootstrapped environments, without conda.
