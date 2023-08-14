@@ -1,1 +1,1 @@
-``FormatROD``: include support for multi-axis goniometers and faster decompression.
+Formats: Partial support for the Rigaku Oxford Diffraction file format, including support for multi-axis goniometers and faster decompression. (`#645 <https://github.com/cctbx/dxtbx/issues/645>`_)

@@ -1,1 +1,1 @@
-``dxtbx``: add fix for Eiger / NXmx data from i19-2 to correctly assign the image bit depth
+Formats: Add fix for Eiger / NXmx data from DLS i19-2, to correctly assign the image bit depth.

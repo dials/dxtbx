@@ -1,1 +1,1 @@
-Add new Beam class "PolychromaticBeam" for polychromatic/multi-wavelength/wide bandpass experiments.
+Add new Beam class ``dxtbx.model.PolychromaticBeam``, for polychromatic/multi-wavelength/wide bandpass experiments.
