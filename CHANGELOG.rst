@@ -1,3 +1,12 @@
+DIALS 3.15.2 (2023-08-14)
+=========================
+
+Features
+--------
+
+- Update Format handling to reflect move of Eiger detector from PETRA P14 to P13. (`#626 <https://github.com/cctbx/dxtbx/issues/626>`_)
+
+
 DIALS 3.15.1 (2023-06-29)
 =========================
 
