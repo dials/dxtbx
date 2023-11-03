@@ -1,1 +1,1 @@
-Bugfix for dxtbx.image_average: handle detector gain and pixel data type better
+``dxtbx.image_average``: Better handle detector gain and pixel data type.

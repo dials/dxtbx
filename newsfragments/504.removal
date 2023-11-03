@@ -1,1 +1,1 @@
-dxtbx: remove legacy datablock object (obsolete for several years)
+Legacy ``Datablock`` support has been removed, after being deprecated for several years. If you have any experiments that use these, they will need to be re-imported.
