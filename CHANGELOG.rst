@@ -1,3 +1,18 @@
+DIALS 3.17.1 (2024-02-19)
+=========================
+
+Bugfixes
+--------
+
+- Importing the (deprecated and removed) ``dxtbx.datablock`` module failed to display warning properly. (`#665 <https://github.com/cctbx/dxtbx/issues/665>`_)
+
+
+Misc
+----
+
+- `#672 <https://github.com/cctbx/dxtbx/issues/672>`_
+
+
 dxtbx 3.17.0 (2023-11-03)
 =========================
 
