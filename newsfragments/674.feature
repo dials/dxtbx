@@ -1,1 +1,1 @@
-Better handle spectra calibration for bad data in XTC format using new parameter: spectrum_required
+XTC Format has a new parameter, ``spectrum_required=``, to better handle spectra calibration for bad data.
