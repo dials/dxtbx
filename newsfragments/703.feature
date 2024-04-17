@@ -1,1 +1,1 @@
-Add `FormatMANDI` to read time of flight Laue data from MANDI.
+Add format reader to read time of flight Laue data from MANDI.

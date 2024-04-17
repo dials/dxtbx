@@ -1,1 +1,1 @@
-Fixed `Scan.from_dict` bug where some properties were not correctly parsed.
+Fixed some properties not being correctly parsed in `Scan.from_dict`.

@@ -1,1 +1,1 @@
-Add format class to read Jungfrau4M serial images from beamline ID29 at ESRF
+Add format reader for Jungfrau4M serial images from beamline ID29 at ESRF.

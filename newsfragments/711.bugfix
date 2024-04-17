@@ -1,1 +1,1 @@
-Override `setstate` and `getstate` methods for `PolychromaticBeam` to fix error when using `copy.deepcopy`.
+`PolychromaticBeam` can now be copied with `copy.deepcopy`.
