@@ -1,1 +1,1 @@
-Compatility with Python 3.12.
+Compatibility with Python 3.12.
