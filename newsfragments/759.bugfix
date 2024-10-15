@@ -1,1 +1,1 @@
-``dxtbx.dlsnxs2cbf``: add bit_depth_image explicitly to work around issues with data recorded at 32 bit
+``dxtbx.dlsnxs2cbf``: Add work around for issues with data recorded at 32-bit.
